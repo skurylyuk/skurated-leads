@@ -1,4 +1,4 @@
-pythonimport streamlit as st
+import streamlit as st
 
 st.title("Skurated Leads Dashboard")
 st.write("🚧 Dashboard coming soon!")
