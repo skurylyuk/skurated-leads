@@ -1,4 +1,4 @@
-import streamlit as st
+# ============================================================import streamlit as st
 import psycopg2
 import pandas as pd
 import requests
@@ -168,13 +168,7 @@ def execute_query(query, params=None, fetch=True):
 def get_all_leads():
     """Fetch all leads from the database."""
     query = """
-        SELECT id, created_at, "firstName", "lastName", "emailAddress", 
-               "linkedInURL", seniority, "jobTitle", "companyName", 
-               location, country, "websiteURL", "businessIndustry",
-               "Number", status, apollo_id, ai_score, ai_notes, credits_used,
-               "Email#1 Body", "Email#1 Subject", "Email #2 Body", "Email #2 Subject",
-               "Email #3 Body", "Email #3 Subject",
-               "Email 1 sent?", "Email 2 sent?", "Email 3 sent?", "Replied?"
+        SELECT *
         FROM leads
         ORDER BY created_at DESC
     """
@@ -529,20 +523,33 @@ def show_lead_detail():
     st.markdown("---")
     st.markdown("### 📧 Email Sequences")
     
-    for i in range(1, 4):
-        subject_key = f"Email#{i} Subject" if i == 1 else f"Email #{i} Subject"
-        body_key = f"Email#{i} Body" if i == 1 else f"Email #{i} Body"
-        sent_key = f"Email {i} sent?"
-        
-        subject = lead.get(subject_key)
-        body = lead.get(body_key)
-        sent = lead.get(sent_key)
-        
-        if subject or body:
-            with st.expander(f"Email {i} {'✅ Sent' if sent == 'yes' else '📝 Draft'}"):
-                st.markdown(f"**Subject:** {subject or 'N/A'}")
-                st.markdown("**Body:**")
-                st.markdown(body or 'N/A')
+    # Check which email columns exist and display them
+    email_cols = [col for col in lead.index if 'email' in col.lower() and ('body' in col.lower() or 'subject' in col.lower())]
+    
+    if email_cols:
+        for i in range(1, 4):
+            # Try different naming patterns
+            subject = None
+            body = None
+            sent = None
+            
+            for col in lead.index:
+                col_lower = col.lower()
+                if f'email#{i}' in col_lower.replace(' ', '') or f'email {i}' in col_lower or f'email{i}' in col_lower:
+                    if 'subject' in col_lower:
+                        subject = lead.get(col)
+                    elif 'body' in col_lower:
+                        body = lead.get(col)
+                if f'email {i} sent' in col_lower:
+                    sent = lead.get(col)
+            
+            if subject or body:
+                with st.expander(f"Email {i} {'✅ Sent' if sent == 'yes' else '📝 Draft'}"):
+                    st.markdown(f"**Subject:** {subject or 'N/A'}")
+                    st.markdown("**Body:**")
+                    st.markdown(body or 'N/A')
+    else:
+        st.info("No email sequences found for this lead.")
 
 # ============================================================
 # SIDEBAR
